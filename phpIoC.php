@@ -37,6 +37,7 @@ class Ioc
      */
     protected static function getMethodParams($className, $methodsName = '__construct')
     {
+        extract($_GET);
         $paramArr = []; //存储类方法的：参数、参数类型
         $class = new ReflectionClass($className);//通过反射获取指定类
 
@@ -45,17 +46,19 @@ class Ioc
             $params = $method->getParameters();//获取该类指定方法的参数名列表(此处不会返回参数对应的参数类型)
             if (count($params) > 0) {
                 foreach ($params as $key => $param) {
+                    //echo '获取类型：'.$param->getType().'<hr />';
                     if ($paramClass = $param->getClass()) {//如果当前参数是class类型
                         $paramClassName = $paramClass->getName();//获取当前class类型参数的类名
                         $args = self::getMethodParams($paramClassName);
                         $paramArr[] = (new ReflectionClass($paramClassName))->newInstanceArgs($args);//创建一个类的新实例，给出的参数将传递到类的构造函数
                     } else {//如果当前参数不是class类型
-                        //echo $param . '不是一个类';
+                        $c_var = $param->getName();
+                        $paramArr[] = $$c_var;
                     }
+
                 }
             }
         }
-
         return $paramArr;
     }
 }
@@ -75,11 +78,12 @@ class A
 
 class B
 {
-    public function hello(A $a, $c = '')
+    public function hello(A $a, $c = '', $d = '')
     {
+        echo '参数c：' . $c . '<br />参数d：' . $d . '<br />';
         $a->hello();
     }
 }
 
-
+//demo.php?d=dval&c=cval
 Ioc::make('B', 'hello');
